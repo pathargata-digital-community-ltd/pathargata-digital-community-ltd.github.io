@@ -1313,27 +1313,28 @@
                 </div>
             </div>
 
-            <!-- NEW INVITE & UPDATE PAGE -->
             <div id="page-invite" class="hidden p-0 min-h-screen bg-gray-50 pb-20">
-                <div class="bg-white p-4 sticky top-0 z-30 shadow-sm border-b pt-safe flex items-center gap-2">
-                    <button onclick="switchPage('home')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600"><i class="fa-solid fa-arrow-left text-lg"></i></button>
-                    <h2 class="text-xl font-bold text-gray-800">অ্যাপ শেয়ার ও আপডেট</h2>
-                </div>
+    <!-- Header code existing... -->
+    <div class="p-6 space-y-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-100 text-center">
+            <h3 class="font-bold text-gray-800">আপনার রেফারেল লিংক</h3>
+            <p class="text-[10px] text-gray-500 mb-4">বন্ধুদের এই লিংক পাঠিয়ে পয়েন্ট আয় করুন!</p>
+            <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-dashed border-pink-300">
+                <input type="text" id="my-ref-link" readonly class="bg-transparent text-[10px] flex-1 outline-none text-gray-600 font-mono">
+                <button onclick="copyRefLink()" class="bg-pink-500 text-white px-3 py-2 rounded-lg text-xs font-bold">Copy</button>
+            </div>
+        </div>
 
-                <div class="p-6 flex flex-col items-center justify-center mt-6 space-y-6">
-                    <div class="w-28 h-28 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-5xl shadow-md logo-animate border-4 border-white">
-                        <i class="fa-solid fa-share-nodes"></i>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-2xl font-bold text-gray-800">পাথরঘাটা ডিজিটাল</h3>
-                        <p class="text-gray-500 mt-2 text-sm">অ্যাপটি বন্ধুদের সাথে শেয়ার করুন অথবা নতুন ভার্সন আপডেট করতে ওয়েবসাইটে যান।</p>
-                    </div>
-
-                    <div class="w-full space-y-4 max-w-sm mt-8">
-                        <!-- Option 1: Copy/Share Link -->
-                        <button onclick="actionShareInvite()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-3 text-base active:scale-95">
-                            <i class="fa-solid fa-copy text-xl"></i> লিংক কপি ও শেয়ার করুন
-                        </button>
+        <div id="referral-input-section" class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100">
+            <h3 class="font-bold text-gray-800 text-sm mb-1">ইনভাইটেশন কোড দিন</h3>
+            <p class="text-[10px] text-gray-500 mb-4">বন্ধুর কোডটি এখানে বসিয়ে বোনাস পয়েন্ট নিন।</p>
+            <div class="space-y-3">
+                <input type="text" id="input-ref-code" placeholder="বন্ধুর কোডটি এখানে লিখুন" class="w-full bg-gray-50 border p-3 rounded-xl text-sm outline-none uppercase font-mono">
+                <button onclick="submitReferralCode()" id="btn-submit-code" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95">কোড সাবমিট করুন</button>
+            </div>
+        </div>
+    </div>
+</div>
 
                         <!-- Option 2: Go to Website / Update App -->
                         <button onclick="actionUpdateApp()" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-3 text-base active:scale-95">
@@ -5422,6 +5423,70 @@ lng: locData.lng
                 else showToast("রুলস লিংক পাওয়া যায়নি", "error");
             });
         }
+        
+        // --- REFERRAL & INVITE SYSTEM LOGIC ---
+
+window.updateInvitePage = () => {
+    const myUid = window.currentUser.uid;
+    const shareLink = globalShareLink || "https://patharghata.app"; 
+    // ইউজারের নিজস্ব রেফারেল লিংক সেট করা
+    const myRefLink = shareLink + "?ref=" + myUid;
+    const linkInput = document.getElementById('my-ref-link');
+    if(linkInput) linkInput.value = myRefLink;
+
+    // যদি ইউজার আগে কোড ব্যবহার করে থাকে, তবে ইনপুট বক্সটি হাইড করা
+    const inputSection = document.getElementById('referral-input-section');
+    if (inputSection && userDetails.used_referral) {
+        inputSection.innerHTML = `
+            <div class="text-center py-2 text-green-600 font-bold text-sm">
+                <i class="fa-solid fa-circle-check"></i> আপনি ইতিমধ্যে বোনাস পয়েন্ট গ্রহণ করেছেন।
+            </div>`;
+    }
+};
+
+window.copyRefLink = () => {
+    const linkInput = document.getElementById('my-ref-link');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // মোবাইলের জন্য
+    document.execCommand('copy');
+    showToast("আপনার রেফারেল লিংক কপি হয়েছে!");
+};
+
+window.submitReferralCode = async () => {
+    const code = document.getElementById('input-ref-code').value.trim();
+    const myUid = window.currentUser.uid;
+
+    if (!code) return showToast("দয়া করে কোড দিন", "error");
+    if (code === myUid) return showToast("নিজের কোড নিজে ব্যবহার করা যাবে না!", "error");
+    if (userDetails.used_referral) return showToast("আপনি একবার কোড ব্যবহার করেছেন", "error");
+
+    const btn = document.getElementById('btn-submit-code');
+    btn.disabled = true;
+    btn.innerHTML = 'যাচাই হচ্ছে...';
+
+    try {
+        const inviterSnap = await get(ref(db, `users/${code}`));
+        if (inviterSnap.exists()) {
+            const bonus = window.dynamicPoints.refer || 50;
+            // ১. যে ইনভাইট করেছে তাকে পয়েন্ট দেওয়া
+            await runTransaction(ref(db, `users/${code}/total_points`), (curr) => (curr || 0) + bonus);
+            // ২. যে কোড দিল তাকে ১০ পয়েন্ট বোনাস
+            await runTransaction(ref(db, `users/${myUid}/total_points`), (curr) => (curr || 0) + 10);
+            // ৩. ইউজারের প্রোফাইল আপডেট
+            await update(ref(db, `users/${myUid}`), { used_referral: true, referred_by: code });
+
+            showToast("বোনাস পয়েন্ট সফলভাবে যোগ হয়েছে!", "success");
+            window.updateInvitePage();
+        } else {
+            showToast("ভুল কোড! সঠিক কোডটি দিন।", "error");
+        }
+    } catch (e) {
+        showToast("ত্রুটি: " + e.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "কোড সাবমিট করুন";
+    }
+};
         // --- ACCOUNT DETAILS & 60 DAYS LOGIC ---
 
         window.openAccountDetailsModal = () => {
@@ -6278,6 +6343,9 @@ window.addEventListener('uploadNIDEvent', async (e) => {
             if (id === 'profile' && window.currentUser) window.loadProfilePosts(window.currentUser.uid, 'my-posts-feed');
             if (id === 'monetization' && window.currentUser) window.checkMonetizationStatus();
             if (id === 'verification' && window.currentUser) window.checkVerificationStatus();
+            if (id === 'invite' && window.currentUser) {
+    window.updateInvitePage();
+}
             if (id === 'notifications') {
                 document.getElementById('nav-badge-notice')?.classList.remove('active');
                 document.getElementById('header-badge-notice')?.classList.remove('active');
