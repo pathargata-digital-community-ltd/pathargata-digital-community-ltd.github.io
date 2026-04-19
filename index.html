@@ -42,10 +42,10 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // মেইন রুটে রেজিস্ট্রেশন করার জন্য পাথ আপডেট করা হলো
-      navigator.serviceWorker.register('service-worker.js')
+      // যেহেতু আপনার সাইটটি Pathargata ফোল্ডারে আছে, তাই পাথ ঠিক করে দেওয়া হলো
+      navigator.serviceWorker.register('/Pathargata/service-worker.js')
         .then((registration) => {
-          console.log('Service Worker সফলভাবে মেইন রুটে রেজিস্টার হয়েছে:', registration.scope);
+          console.log('Service Worker সফলভাবে রেজিস্টার হয়েছে:', registration.scope);
         })
         .catch((error) => {
           console.error('Service Worker রেজিস্ট্রেশন ফেইল করেছে:', error);
@@ -637,7 +637,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
     </style>
-    <script src="https://pathargata-digital-community-ltd.github.io/advanced-features.js
+    <script src="https://pathargata-digital-community-ltd.github.io/Pathargata/advanced-features.js"></script>
 </head>
 
 <body id="body-main">
@@ -715,6 +715,13 @@
                     <input type="password" id="reg-pass" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ সংখ্যা)" class="w-full bg-gray-50 border p-3.5 rounded-xl pr-10 text-base">
                     <i onclick="togglePassword('reg-pass', this)" class="fa-regular fa-eye absolute right-3 top-4 text-gray-500 cursor-pointer"></i>
                 </div>
+                
+                <!-- রেফারেল কোড ইনপুট বক্স -->
+<div class="relative w-full">
+    <label class="text-xs text-gray-500 ml-1 block mb-1 font-bold">রেফার কোড (ঐচ্ছিক)</label>
+    <input type="text" id="reg-ref-code" placeholder="বন্ধুর রেফার কোড দিন" class="w-full bg-gray-50 border p-3.5 rounded-xl text-base">
+    <p class="text-[10px] text-gray-400 mt-1 ml-1">আপনার যদি কোনো রেফার কোড থাকে তবে এখানে দিন।</p>
+</div>
 
                 <!-- Privacy Policy Checkbox -->
                 <div class="flex items-start gap-2 pt-1">
@@ -1313,28 +1320,27 @@
                 </div>
             </div>
 
+            <!-- NEW INVITE & UPDATE PAGE -->
             <div id="page-invite" class="hidden p-0 min-h-screen bg-gray-50 pb-20">
-    <!-- Header code existing... -->
-    <div class="p-6 space-y-6">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-100 text-center">
-            <h3 class="font-bold text-gray-800">আপনার রেফারেল লিংক</h3>
-            <p class="text-[10px] text-gray-500 mb-4">বন্ধুদের এই লিংক পাঠিয়ে পয়েন্ট আয় করুন!</p>
-            <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-dashed border-pink-300">
-                <input type="text" id="my-ref-link" readonly class="bg-transparent text-[10px] flex-1 outline-none text-gray-600 font-mono">
-                <button onclick="copyRefLink()" class="bg-pink-500 text-white px-3 py-2 rounded-lg text-xs font-bold">Copy</button>
-            </div>
-        </div>
+                <div class="bg-white p-4 sticky top-0 z-30 shadow-sm border-b pt-safe flex items-center gap-2">
+                    <button onclick="switchPage('home')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-600"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+                    <h2 class="text-xl font-bold text-gray-800">অ্যাপ শেয়ার ও আপডেট</h2>
+                </div>
 
-        <div id="referral-input-section" class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100">
-            <h3 class="font-bold text-gray-800 text-sm mb-1">ইনভাইটেশন কোড দিন</h3>
-            <p class="text-[10px] text-gray-500 mb-4">বন্ধুর কোডটি এখানে বসিয়ে বোনাস পয়েন্ট নিন।</p>
-            <div class="space-y-3">
-                <input type="text" id="input-ref-code" placeholder="বন্ধুর কোডটি এখানে লিখুন" class="w-full bg-gray-50 border p-3 rounded-xl text-sm outline-none uppercase font-mono">
-                <button onclick="submitReferralCode()" id="btn-submit-code" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95">কোড সাবমিট করুন</button>
-            </div>
-        </div>
-    </div>
-</div>
+                <div class="p-6 flex flex-col items-center justify-center mt-6 space-y-6">
+                    <div class="w-28 h-28 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-5xl shadow-md logo-animate border-4 border-white">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold text-gray-800">পাথরঘাটা ডিজিটাল</h3>
+                        <p class="text-gray-500 mt-2 text-sm">অ্যাপটি বন্ধুদের সাথে শেয়ার করুন অথবা নতুন ভার্সন আপডেট করতে ওয়েবসাইটে যান।</p>
+                    </div>
+
+                    <div class="w-full space-y-4 max-w-sm mt-8">
+                        <!-- Option 1: Copy/Share Link -->
+                        <button onclick="actionShareInvite()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-3 text-base active:scale-95">
+                            <i class="fa-solid fa-copy text-xl"></i> লিংক কপি ও শেয়ার করুন
+                        </button>
 
                         <!-- Option 2: Go to Website / Update App -->
                         <button onclick="actionUpdateApp()" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-3 text-base active:scale-95">
@@ -1361,6 +1367,17 @@
                             <p class="text-xs text-white/80"><i class="fa-solid fa-circle-info text-yellow-400"></i> বর্তমানে আপনি শুধুমাত্র <b>রেফারেল</b> থেকে পয়েন্ট পাচ্ছেন।</p>
                         </div>
                     </div>
+                    
+                    <div class="mt-4 flex gap-3">
+     <div class="bg-white/10 p-2 rounded-lg border border-white/20 flex-1 text-center">
+         <p class="text-[10px] opacity-70">মোট পয়েন্ট</p>
+         <p class="font-bold text-lg" id="qual-points">0</p>
+     </div>
+     <div class="bg-white/10 p-2 rounded-lg border border-white/20 flex-1 text-center">
+         <p class="text-[10px] opacity-70">মোট রেফার</p>
+         <p class="font-bold text-lg" id="qual-refer">0</p>
+     </div>
+</div>
 
                     <h4 class="font-bold text-gray-700 mb-3 border-l-4 border-indigo-500 pl-3">যোগ্যতা সমূহ</h4>
                     <div class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-4">
@@ -1395,6 +1412,11 @@
                         <p class="text-sm text-green-100 mb-1">আপনার মোট পয়েন্ট</p>
                         <h2 class="text-5xl font-extrabold drop-shadow-md flex items-center gap-2" id="dash-total-points">0 <i class="fa-solid fa-coins text-yellow-300 text-3xl"></i></h2>
                     </div>
+                    
+                    <!-- মোট রেফারেল সংখ্যা দেখানোর জন্য -->
+<div class="mt-4 bg-white/10 px-4 py-2 rounded-full border border-white/20 text-xs font-bold">
+    <i class="fa-solid fa-users mr-1"></i> মোট রেফার: <span id="dash-total-refer">0</span> জন
+</div>
 
                     <h4 class="font-bold text-gray-700 mb-3 border-l-4 border-teal-500 pl-3">আজকের পয়েন্ট ট্র্যাকার</h4>
                     <div class="bg-white p-4 rounded-xl shadow-sm mb-6 grid grid-cols-3 gap-3 text-center">
@@ -2208,6 +2230,17 @@
         if (refUid && !localStorage.getItem('has_registered_before')) {
             localStorage.setItem('inviter_uid', refUid);
         }
+        
+if (refUid) {
+    // অল্প সময় পর ইনপুট বক্সে কোডটি বসাবে (যাতে HTML লোড হওয়ার সময় পায়)
+    setTimeout(() => {
+        const refInput = document.getElementById('reg-ref-code');
+        if (refInput) {
+            refInput.value = refUid;
+            showToast("রেফার কোডটি স্বয়ংক্রিয়ভাবে যুক্ত হয়েছে!");
+        }
+    }, 1000);
+}
 
         // Fetch Dynamic Points from Admin Settings
         onValue(ref(db, 'admin_settings/point_system'), (snap) => {
@@ -3778,21 +3811,31 @@ lng: locData.lng
                 await set(deviceRef, { ip: userIP, timestamp: Date.now(), uid: cred.user.uid });
 
                 // Process Referral Reward (Only if New Device)
-                const inviterUid = localStorage.getItem('inviter_uid');
-                if (inviterUid && isNewDevice) {
-                    await runTransaction(ref(db, `users/${inviterUid}/total_points`), (currentPoints) => {
-                        return (currentPoints || 0) + window.dynamicPoints.refer;
-                    });
-                    // Send Notification to Inviter
-                    await push(ref(db, `notifications/${inviterUid}`), {
-                        type: 'referral_bonus',
-                        fromName: name,
-                        text: `আপনার রেফারেন্সে একজন যুক্ত হয়েছেন! আপনি ${window.dynamicPoints.refer} পয়েন্ট পেয়েছেন।`,
-                        timestamp: Date.now(),
-                        read: false
-                    });
-                    localStorage.removeItem('inviter_uid'); // Clean up
-                }
+const manualRefCode = document.getElementById('reg-ref-code').value.trim();
+let inviterUid = manualRefCode || localStorage.getItem('inviter_uid');
+
+if (inviterUid && isNewDevice) {
+    // রেফারারকে (যিনি ইনভাইট করেছেন) পয়েন্ট দেওয়া
+    await runTransaction(ref(db, `users/${inviterUid}/total_points`), (currentPoints) => {
+        return (currentPoints || 0) + window.dynamicPoints.refer;
+    });
+    
+await runTransaction(ref(db, `users/${inviterUid}/referral_count`), (currentCount) => {
+    return (currentCount || 0) + 1;
+});
+
+    // রেফারারকে নোটিফিকেশন পাঠানো
+    await push(ref(db, `notifications/${inviterUid}`), {
+        type: 'referral_bonus',
+        fromName: name,
+        text: `আপনার রেফারেন্সে ${name} যুক্ত হয়েছে! আপনি ${window.dynamicPoints.refer} পয়েন্ট পেয়েছেন।`,
+        timestamp: Date.now(),
+        read: false
+    });
+    
+    // কাজ শেষ হলে স্টোরেজ ক্লিয়ার করা
+    localStorage.removeItem('inviter_uid');
+}
                 showToast("রেজিস্ট্রেশন সফল হয়েছে!", "success");
                 // ফর্ম ক্লিয়ার বা লগইন পেজে পাঠানোর লজিক এখানে দিতে পারেন যদি চান
 
@@ -4479,6 +4522,8 @@ lng: locData.lng
             const uid = window.currentUser.uid;
             const qualView = document.getElementById('monetization-qualification-view');
             const dashView = document.getElementById('monetization-dashboard-view');
+            const pts = userDetails.total_points || 0;
+const refCount = userDetails.referral_count || 0;
             
             // Check if Approved
             if (userDetails.monetization_status === 'approved') {
@@ -4486,8 +4531,8 @@ lng: locData.lng
                 dashView.classList.remove('hidden');
 
                 // Update Dashboard Values
-                document.getElementById('dash-total-points').innerHTML = `${userDetails.total_points || 0} <i class="fa-solid fa-coins text-yellow-300 text-3xl"></i>`;
-                document.getElementById('min-withdraw-text').innerText = window.dynamicPoints.min_withdraw;
+               document.getElementById('dash-total-points').innerHTML = `${pts} <i class="fa-solid fa-coins text-yellow-300 text-3xl"></i>`;
+if (document.getElementById('dash-total-refer')) document.getElementById('dash-total-refer').innerText = refCount;
 
                 // Load Today's Tracker
                 const today = new Date().toLocaleDateString('en-GB');
@@ -4501,6 +4546,9 @@ lng: locData.lng
                 // Qualification View
                 dashView.classList.add('hidden');
                 qualView.classList.remove('hidden');
+                
+                if (document.getElementById('qual-points')) document.getElementById('qual-points').innerText = pts;
+if (document.getElementById('qual-refer')) document.getElementById('qual-refer').innerText = refCount;
 
                 const isVerified = !!userDetails.isVerified;
                 const friendCount = myFriends.length;
@@ -5391,22 +5439,25 @@ lng: locData.lng
         });
 
         window.actionShareInvite = () => {
-            if (!globalShareLink || globalShareLink === "লিংক সেট করা নেই") {
-                return showToast("এডমিন এখনো ইনভাইট লিংক সেট করেননি", "error");
-            }
+    if (!globalShareLink || globalShareLink === "লিংক সেট করা নেই") {
+        return showToast("এডমিন এখনো ইনভাইট লিংক সেট করেননি", "error");
+    }
 
-            const text = `পাথরঘাটা ডিজিটাল অ্যাপটি ব্যবহার করুন এবং সকল সেবা নিন হাতের মুঠোয়! ডাউনলোড লিংক: ${globalShareLink}`;
+    // আপনার নিজস্ব UID লিংকের সাথে অটোমেটিক যুক্ত হবে
+    const personalRefLink = `${globalShareLink}?ref=${window.currentUser.uid}`;
+    
+    const shareText = `পাথরঘাটা ডিজিটাল অ্যাপটি ব্যবহার করুন এবং বোনাস পয়েন্ট পেতে আমার রেফারেল কোড ব্যবহার করুন। ডাউনলোড লিংক: ${personalRefLink}`;
 
-            if (navigator.share) {
-                navigator.share({
-                    title: 'পাথরঘাটা ডিজিটাল',
-                    text: text,
-                    url: globalShareLink,
-                }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(text).then(() => showToast("ইনভাইট লিংক কপি হয়েছে!"));
-            }
-        };
+    if (navigator.share) {
+        navigator.share({
+            title: 'পাথরঘাটা ডিজিটাল',
+            text: shareText,
+            url: personalRefLink,
+        }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(shareText).then(() => showToast("আপনার রেফারেল লিংক কপি হয়েছে!"));
+    }
+};
 
         window.actionUpdateApp = () => {
             if (globalUpdateLink && globalUpdateLink !== "") {
@@ -5423,70 +5474,6 @@ lng: locData.lng
                 else showToast("রুলস লিংক পাওয়া যায়নি", "error");
             });
         }
-        
-        // --- REFERRAL & INVITE SYSTEM LOGIC ---
-
-window.updateInvitePage = () => {
-    const myUid = window.currentUser.uid;
-    const shareLink = globalShareLink || "https://patharghata.app"; 
-    // ইউজারের নিজস্ব রেফারেল লিংক সেট করা
-    const myRefLink = shareLink + "?ref=" + myUid;
-    const linkInput = document.getElementById('my-ref-link');
-    if(linkInput) linkInput.value = myRefLink;
-
-    // যদি ইউজার আগে কোড ব্যবহার করে থাকে, তবে ইনপুট বক্সটি হাইড করা
-    const inputSection = document.getElementById('referral-input-section');
-    if (inputSection && userDetails.used_referral) {
-        inputSection.innerHTML = `
-            <div class="text-center py-2 text-green-600 font-bold text-sm">
-                <i class="fa-solid fa-circle-check"></i> আপনি ইতিমধ্যে বোনাস পয়েন্ট গ্রহণ করেছেন।
-            </div>`;
-    }
-};
-
-window.copyRefLink = () => {
-    const linkInput = document.getElementById('my-ref-link');
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999); // মোবাইলের জন্য
-    document.execCommand('copy');
-    showToast("আপনার রেফারেল লিংক কপি হয়েছে!");
-};
-
-window.submitReferralCode = async () => {
-    const code = document.getElementById('input-ref-code').value.trim();
-    const myUid = window.currentUser.uid;
-
-    if (!code) return showToast("দয়া করে কোড দিন", "error");
-    if (code === myUid) return showToast("নিজের কোড নিজে ব্যবহার করা যাবে না!", "error");
-    if (userDetails.used_referral) return showToast("আপনি একবার কোড ব্যবহার করেছেন", "error");
-
-    const btn = document.getElementById('btn-submit-code');
-    btn.disabled = true;
-    btn.innerHTML = 'যাচাই হচ্ছে...';
-
-    try {
-        const inviterSnap = await get(ref(db, `users/${code}`));
-        if (inviterSnap.exists()) {
-            const bonus = window.dynamicPoints.refer || 50;
-            // ১. যে ইনভাইট করেছে তাকে পয়েন্ট দেওয়া
-            await runTransaction(ref(db, `users/${code}/total_points`), (curr) => (curr || 0) + bonus);
-            // ২. যে কোড দিল তাকে ১০ পয়েন্ট বোনাস
-            await runTransaction(ref(db, `users/${myUid}/total_points`), (curr) => (curr || 0) + 10);
-            // ৩. ইউজারের প্রোফাইল আপডেট
-            await update(ref(db, `users/${myUid}`), { used_referral: true, referred_by: code });
-
-            showToast("বোনাস পয়েন্ট সফলভাবে যোগ হয়েছে!", "success");
-            window.updateInvitePage();
-        } else {
-            showToast("ভুল কোড! সঠিক কোডটি দিন।", "error");
-        }
-    } catch (e) {
-        showToast("ত্রুটি: " + e.message, "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "কোড সাবমিট করুন";
-    }
-};
         // --- ACCOUNT DETAILS & 60 DAYS LOGIC ---
 
         window.openAccountDetailsModal = () => {
@@ -6343,9 +6330,6 @@ window.addEventListener('uploadNIDEvent', async (e) => {
             if (id === 'profile' && window.currentUser) window.loadProfilePosts(window.currentUser.uid, 'my-posts-feed');
             if (id === 'monetization' && window.currentUser) window.checkMonetizationStatus();
             if (id === 'verification' && window.currentUser) window.checkVerificationStatus();
-            if (id === 'invite' && window.currentUser) {
-    window.updateInvitePage();
-}
             if (id === 'notifications') {
                 document.getElementById('nav-badge-notice')?.classList.remove('active');
                 document.getElementById('header-badge-notice')?.classList.remove('active');
