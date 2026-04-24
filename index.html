@@ -638,11 +638,7 @@
         }
     </style>
     <script src="https://pathargata-digital-community-ltd.github.io/Pathargata/advanced-features.js"></script>
-    <!-- স্মার্ট কার্ড মডিউল লিংক -->
-<link rel="stylesheet" href="card-style.css">
-<script src="card-logic.js" defer></script>
-<!-- html2canvas লাইব্রেরি -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="card-loader.js" defer></script>
 </head>
 
 <body id="body-main">
@@ -1586,7 +1582,13 @@
                             <p id="profile-bio" class="text-sm text-gray-600 mt-2 max-w-xs mx-auto italic">...</p>
                         </div>
                         <div class="flex gap-3 mt-6 border-b pb-4">
-                            <button onclick="toggleEditProfile(true)" class="flex-1 bg-gray-100 text-gray-800 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-200 flex items-center justify-center gap-2 transition"><i class="fa-solid fa-pen"></i> এডিট প্রোফাইল</button>
+    <!-- নতুন বাটন যা অন্য ফাইল থেকে লজিক কল করবে -->
+    <button onclick="loadAndOpenCard()" class="flex-1 bg-white border-2 border-green-600 text-green-700 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95 transition">
+        <i class="fa-solid fa-id-card"></i> আমার কার্ড
+    </button>
+    <button onclick="toggleEditProfile(true)" class="flex-1 bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition hover:bg-green-700 active:scale-95 shadow-md">
+        <i class="fa-solid fa-user-pen"></i> এডিট প্রোফাইল
+    </button>
                         </div>
                     </div>
                 </div>
