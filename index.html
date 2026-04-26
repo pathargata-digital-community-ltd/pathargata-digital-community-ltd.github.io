@@ -42,14 +42,20 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // যেহেতু আপনার সাইটটি Pathargata ফোল্ডারে আছে, তাই পাথ ঠিক করে দেওয়া হলো
       navigator.serviceWorker.register('/Pathargata/service-worker.js')
         .then((registration) => {
-          console.log('Service Worker সফলভাবে রেজিস্টার হয়েছে:', registration.scope);
+          // যখনই নতুন সার্ভিস ওয়ার্কার পাওয়া যাবে, পেজ রিলোড হবে
+          registration.onupdatefound = () => {
+            const installingWorker = registration.installing;
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New update available! Reloading...');
+                window.location.reload();
+              }
+            };
+          };
         })
-        .catch((error) => {
-          console.error('Service Worker রেজিস্ট্রেশন ফেইল করেছে:', error);
-        });
+        .catch(error => console.error('SW Registration failed:', error));
     });
   }
 </script>
@@ -1959,7 +1965,7 @@
             <div onclick="switchPage('services')" class="nav-btn w-1/5 text-center cursor-pointer py-1" id="btn-services"><i class="fa-solid fa-layer-group mb-1"></i>
                 <p>সেবা</p>
             </div>
-            <div onclick="loadPage('messages.html')" class="nav-btn w-1/5 text-center cursor-pointer py-1" id="btn-messages">
+            <div onclick="window.location.href='messages.html?v=' + new Date().getTime()" class="nav-btn w-1/5 text-center cursor-pointer py-1" id="btn-messages">
     <i class="fa-solid fa-comments mb-1"></i>
     <p>মেসেজ</p>
 </div>
@@ -6432,29 +6438,26 @@ window.addEventListener('uploadNIDEvent', async (e) => {
         // --- SEAMLESS PAGE LOADER SYSTEM ---
 
 window.loadPage = async (url) => {
-    // ১. একটি ওভারলে শ্যাডো দিন যাতে ইউজার বুঝতে পারে লোড হচ্ছে (ঐচ্ছিক)
     const mainApp = document.getElementById('main-app');
-    mainApp.style.opacity = '0.5';
+    if (mainApp) mainApp.style.opacity = '0.5';
 
     try {
+        // ক্যাশ থেকে ফাইলটি নিবে, কিন্তু ব্যাকগ্রাউন্ডে চেক করবে নতুন ভার্সন আছে কিনা
         const response = await fetch(url);
         const html = await response.text();
-        
-        // ২. নতুন পেজের HTML পার্স করা
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const newContent = doc.querySelector('body').innerHTML;
 
-        // ৩. মেইন অ্যাপ কন্টেইনারে নতুন কন্টেন্ট বসিয়ে দেওয়া
-        // আমরা এখানে একটি নতুন ডিভ তৈরি করে ইনজেক্ট করতে পারি যাতে মেইন ফাইল নষ্ট না হয়
-        document.body.innerHTML = html; // সম্পূর্ণ ফাইল সোয়াপ করা (সবচেয়ে সহজ পদ্ধতি)
-
-        // ৪. ইউআরএল পরিবর্তন করা (রিফ্রেশ ছাড়া)
-        window.history.pushState({ path: url }, '', url);
+        // শুধু বডির ভেতরের কন্টেন্ট পরিবর্তন করা হচ্ছে (দ্রুত হবে)
+        document.body.innerHTML = newContent;
         
-        // ৫. স্ক্রিপ্টগুলো পুনরায় সচল করা
-        // ফায়ারবেস বা অন্যান্য স্ক্রিপ্ট যেন কাজ করে সেজন্য এটি দরকার
-        const scripts = document.body.querySelectorAll("script");
+        // ইউআরএল পরিবর্তন এবং ইতিহাস বজায় রাখা
+        window.history.pushState({ path: url }, '', url);
+
+        // নতুন পেজের স্ক্রিপ্টগুলো পুনরায় সচল করা
+        const scripts = document.querySelectorAll("script");
         scripts.forEach(oldScript => {
             const newScript = document.createElement("script");
             Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
@@ -6462,15 +6465,11 @@ window.loadPage = async (url) => {
             oldScript.parentNode.replaceChild(newScript, oldScript);
         });
 
+        if (mainApp) mainApp.style.opacity = '1';
     } catch (err) {
-        console.error("Page loading failed:", err);
-        window.location.href = url; // যদি কোনো কারণে ফেইল করে তবে নরমাল লোড হবে
+        // কোনো সমস্যা হলে সরাসরি পেজ লোড করবে
+        window.location.href = url;
     }
-};
-
-// ব্রাউজারের ব্যাক বাটন হ্যান্ডেল করা
-window.onpopstate = function() {
-    location.reload(); // ব্যাক বাটনে চাপ দিলে পেজ রিফ্রেশ করে আগের অবস্থায় ফেরা
 };
     </script>
 
