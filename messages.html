@@ -5,56 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>মেসেজ - পাথরঘাটা ডিজিটাল</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font: Hind Siliguri -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- CryptoJS for Encryption -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-            background-color: #f7f9fb;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
-        }
-
-        .chat-bubble-me {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            color: white;
-            border-radius: 18px 18px 0 18px;
-            box-shadow: 0 2px 5px rgba(22, 163, 74, 0.2);
-        }
-
-        .chat-bubble-other {
-            background: #ffffff;
-            color: #1f2937;
-            border-radius: 18px 18px 18px 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f1f5f9;
-        }
-
-        .active-dot {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 12px;
-            height: 12px;
-            background-color: #22c55e;
-            border: 2px solid white;
-            border-radius: 50%;
-        }
-
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-        .pt-safe { padding-top: env(safe-area-inset-top); }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f7f9fb; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        .chat-bubble-me { background: linear-gradient(135deg, #0084ff 0%, #0072ff 100%); color: white; border-radius: 18px 18px 0 18px; }
+        .chat-bubble-other { background: #ffffff; color: #1f2937; border-radius: 18px 18px 18px 0; border: 1px solid #f1f5f9; }
+        .status-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; }
+        .online { background-color: #22c55e; }
+        .offline { background-color: #94a3b8; }
         .hidden-custom { display: none !important; }
+        
+        /* Swipe to Reply styling */
+        .msg-row { transition: transform 0.2s ease; cursor: grab; }
+        .reply-indicator { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); opacity: 0; transition: 0.2s; color: #0084ff; }
+        
+        /* Voice Recording Animation */
+        .recording-pulse { animation: pulse 1.5s infinite; color: red; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .reply-box { border-left: 4px solid #0084ff; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; margin-bottom: 5px; font-size: 12px; }
     </style>
 </head>
 
@@ -62,79 +35,72 @@
 
     <!-- চ্যাট লিস্ট ভিউ -->
     <div id="chat-list-view" class="min-h-screen flex flex-col">
-        <header class="bg-white border-b sticky top-0 z-50 px-4 py-3 flex items-center gap-4 shadow-sm pt-safe">
+        <header class="bg-white border-b sticky top-0 z-50 px-4 py-3 flex items-center gap-4 shadow-sm">
             <a href="index.html" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">
                 <i class="fa-solid fa-arrow-left text-lg"></i>
             </a>
             <h1 class="text-xl font-bold text-gray-800">ইনবক্স</h1>
         </header>
 
-        <!-- একটিভ ফ্রেন্ডস (স্টোরি স্টাইল) -->
         <div class="bg-white py-4 border-b overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <div id="quick-chat-friends" class="flex gap-5 px-4">
-                <!-- এখানে একটিভ ফ্রেন্ডস লোড হবে -->
-                <div class="animate-pulse flex flex-col items-center gap-2">
-                    <div class="w-14 h-14 bg-gray-200 rounded-full"></div>
-                    <div class="w-10 h-2 bg-gray-200 rounded"></div>
-                </div>
-            </div>
+            <div id="quick-chat-friends" class="flex gap-5 px-4"></div>
         </div>
 
-        <!-- কনভারসেশন লিস্ট -->
-        <div class="flex-1 bg-white">
-            <div id="chat-list-container" class="pb-24">
-                <div class="p-10 text-center text-gray-400">
-                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-green-500"></i>
-                    <p class="text-sm">মেসেজ লোড হচ্ছে...</p>
-                </div>
-            </div>
+        <div id="chat-list-container" class="flex-1 bg-white pb-24">
+            <div class="p-10 text-center text-gray-400">লোড হচ্ছে...</div>
         </div>
     </div>
 
     <!-- চ্যাট কনভারসেশন ভিউ -->
     <div id="chat-conversation-view" class="fixed inset-0 z-[100] bg-[#f0f2f5] flex flex-col hidden-custom">
-        <header class="bg-white p-3 border-b flex items-center justify-between sticky top-0 z-50 shadow-sm pt-safe">
+        <header class="bg-white p-3 border-b flex items-center justify-between sticky top-0 z-50 shadow-sm">
             <div class="flex items-center gap-3">
-                <button onclick="closeChat()" class="text-gray-500 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
-                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                <button onclick="closeChat()" class="text-gray-500 w-10 h-10 flex items-center justify-center rounded-full">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </button>
-                <div id="chat-header-avatar" class="w-10 h-10 rounded-full border overflow-hidden bg-green-50 flex items-center justify-center font-bold text-green-600">
-                    U
-                </div>
+                <div id="chat-header-avatar" class="w-10 h-10 rounded-full border overflow-hidden flex items-center justify-center font-bold text-green-600 relative"></div>
                 <div>
-                    <h3 class="font-bold text-gray-800 text-base leading-none" id="chat-header-name">লোড হচ্ছে...</h3>
-                    <span class="text-[10px] text-green-500 font-bold">Online</span>
+                    <h3 class="font-bold text-gray-800 text-sm leading-none" id="chat-header-name">লোড হচ্ছে...</h3>
+                    <span id="chat-header-status" class="text-[10px] font-bold"></span>
                 </div>
             </div>
-            <button class="text-gray-400 w-10 h-10 flex items-center justify-center"><i class="fa-solid fa-ellipsis-vertical text-lg"></i></button>
+            <div class="flex gap-4 text-blue-600 mr-2">
+                <button onclick="alert('অডিও কলিং ফিচারটি শীঘ্রই আসছে!')"><i class="fa-solid fa-phone"></i></button>
+                <button onclick="alert('ভিডিও কলিং ফিচারটি শীঘ্রই আসছে!')"><i class="fa-solid fa-video"></i></button>
+            </div>
         </header>
         
-        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 pb-28">
-            <!-- মেসেজগুলো এখানে আসবে -->
+        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+        <!-- রিপ্লাই প্রিভিউ -->
+        <div id="reply-preview" class="hidden bg-white px-4 py-2 border-t flex justify-between items-center">
+            <div class="text-xs border-l-4 border-blue-500 pl-2">
+                <p class="font-bold text-blue-500" id="reply-user-name"></p>
+                <p class="text-gray-500 truncate" id="reply-text-preview"></p>
+            </div>
+            <button onclick="cancelReply()" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- মেসেজ ইনপুট বক্স -->
-        <div class="bg-white p-3 border-t flex gap-2 items-center fixed bottom-0 w-full pb-safe">
-            <button onclick="document.getElementById('chat-img-input').click()" class="text-gray-400 p-2 hover:text-green-600 transition">
-                <i class="fa-solid fa-circle-plus text-2xl"></i>
-            </button>
-            <input type="file" id="chat-img-input" class="hidden" accept="image/*">
-            
-            <input type="text" id="msg-input" placeholder="আপনার মেসেজ লিখুন..." class="flex-1 bg-gray-100 rounded-full px-5 py-3 text-sm border-0 focus:ring-2 focus:ring-green-500 outline-none">
-            
-            <button onclick="sendMsg()" id="btn-chat-send" class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
+        <!-- ইনপুট এরিয়া -->
+        <div class="bg-white p-3 border-t flex flex-col w-full">
+            <div class="flex gap-2 items-center">
+                <button onclick="document.getElementById('chat-img-input').click()" class="text-gray-400 p-2"><i class="fa-solid fa-image text-xl"></i></button>
+                <input type="file" id="chat-img-input" class="hidden" accept="image/*" onchange="uploadFile(this.files[0], 'image')">
+                
+                <input type="text" id="msg-input" placeholder="মেসেজ লিখুন..." class="flex-1 bg-gray-100 rounded-full px-5 py-2.5 text-sm outline-none">
+                
+                <button id="record-btn" class="text-gray-400 p-2 transition-all"><i class="fa-solid fa-microphone text-xl"></i></button>
+                <button onclick="sendMsg()" id="btn-chat-send" class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, get, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, set, onValue, get, update, query, limitToLast, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // আপনার Firebase কনফিগারেশন
         const firebaseConfig = {
             apiKey: "AIzaSyBfI-THOXOvhyL7LumZVKixtTVwF94CjsI",
             authDomain: "pathargata-digital-comnity-ltd.firebasestorage.app",
@@ -148,12 +114,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         let currentUser = null;
         let currentChatUser = null;
+        let replyData = null;
         const SECRET_KEY = "PatharghataDigitalSecretKey";
 
-        // Encryption Helpers
         const encryptMsg = (text) => CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
         const decryptMsg = (cipherText) => {
             try {
@@ -165,103 +132,90 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                set(ref(db, `users/${user.uid}/status`), { online: true, last_seen: Date.now() });
+                onDisconnect(ref(db, `users/${user.uid}/status`)).set({ online: false, last_seen: Date.now() });
                 loadChatList(user.uid);
                 loadQuickFriends(user.uid);
             } else {
-                window.location.href = "index.html";
+                window.location.href = "login.html";
             }
         });
 
-        // চ্যাট লিস্ট লোড করা
+        // Last Seen Formatter
+        function formatLastSeen(timestamp) {
+            if (!timestamp) return "";
+            const diff = Date.now() - timestamp;
+            const mins = Math.floor(diff / 60000);
+            const hours = Math.floor(mins / 60);
+            const days = Math.floor(hours / 24);
+
+            if (mins < 1) return "এখনই একটিভ";
+            if (mins < 60) return `${mins}মি আগে`;
+            if (hours < 24) return `${hours}ঘণ্টা আগে`;
+            if (days <= 3) return `${days}দিন আগে`;
+            return ""; // ৩ দিনের বেশি হলে হাইড
+        }
+
+        // Chat List Loading with Date
         async function loadChatList(uid) {
             const container = document.getElementById('chat-list-container');
-            
             onValue(ref(db, `user_chats/${uid}`), async (snap) => {
                 const list = snap.val() || {};
-                if (Object.keys(list).length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-20 text-gray-400">
-                            <i class="fa-solid fa-message text-5xl mb-4 opacity-20"></i>
-                            <p>কোনো মেসেজ নেই। বন্ধুদের সাথে চ্যাট শুরু করুন!</p>
-                        </div>`;
-                    return;
-                }
-
                 const sortedList = Object.entries(list).sort((a, b) => b[1].timestamp - a[1].timestamp);
                 container.innerHTML = ""; 
 
                 for (const [peerUid, info] of sortedList) {
-                    try {
-                        const userSnap = await get(ref(db, 'users/' + peerUid));
-                        const uData = userSnap.val() || { name: "পাথরঘাটা ইউজার" };
-                        
-                        let lastMsg = info.lastMessage || "";
-                        if (lastMsg.startsWith("You: ")) {
-                            let msgPart = lastMsg.substring(5);
-                            lastMsg = "আপনি: " + (msgPart.includes("U2FsdGVk") ? decryptMsg(msgPart) : msgPart);
-                        } else {
-                            lastMsg = lastMsg.includes("U2FsdGVk") ? decryptMsg(lastMsg) : lastMsg;
-                        }
+                    const uSnap = await get(ref(db, 'users/' + peerUid));
+                    const uData = uSnap.val() || { name: "ইউজার" };
+                    const timeStr = formatChatTime(info.timestamp);
+                    
+                    let lastMsg = info.lastMessage || "";
+                    if (lastMsg.includes("U2FsdGVk")) lastMsg = decryptMsg(lastMsg.replace("You: ", ""));
 
-                        const html = `
-                            <div onclick="openChat('${peerUid}', '${uData.name}', '${uData.profile_pic || ''}')" class="p-4 border-b bg-white hover:bg-gray-50 active:bg-gray-100 transition cursor-pointer flex items-center gap-3">
-                                <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-100 shrink-0 relative">
-                                    ${uData.profile_pic ? `<img src="${uData.profile_pic}" class="w-full h-full object-cover">` : `<div class="bg-green-100 h-full flex items-center justify-center text-green-700 font-bold text-xl">${uData.name.charAt(0)}</div>`}
-                                    <div class="active-dot"></div>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <h4 class="font-bold text-gray-800 truncate text-base">${uData.name}</h4>
-                                        <span class="text-[10px] text-gray-400 font-medium">${formatTime(info.timestamp)}</span>
-                                    </div>
-                                    <p class="text-sm text-gray-500 truncate font-medium">${lastMsg}</p>
-                                </div>
-                            </div>`;
-                        
-                        container.insertAdjacentHTML('beforeend', html);
-                    } catch (err) { console.error(err); }
-                }
-            });
-        }
-
-        // কুইক ফ্রেন্ডস লোড
-        async function loadQuickFriends(uid) {
-            const div = document.getElementById('quick-chat-friends');
-            onValue(ref(db, `users/${uid}/friends`), async (snap) => {
-                const friends = snap.exists() ? Object.keys(snap.val()) : [];
-                if (friends.length === 0) { div.innerHTML = '<p class="text-xs text-gray-400 py-2">কেউ একটিভ নেই</p>'; return; }
-                
-                div.innerHTML = ""; 
-                for (const fUid of friends.slice(0, 10)) {
-                    const uSnap = await get(ref(db, 'users/' + fUid));
-                    const u = uSnap.val();
-                    if (u) {
-                        const html = `
-                        <div onclick="openChat('${fUid}', '${u.name}', '${u.profile_pic || ''}')" class="flex flex-col items-center cursor-pointer min-w-[70px] transform active:scale-90 transition">
-                            <div class="w-14 h-14 rounded-full border-2 border-green-500 p-0.5 relative mb-1 shadow-sm">
-                                ${u.profile_pic ? `<img src="${u.profile_pic}" class="w-full h-full rounded-full object-cover">` : `<div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center font-bold">${u.name.charAt(0)}</div>`}
-                                <div class="active-dot w-3.5 h-3.5"></div>
+                    container.insertAdjacentHTML('beforeend', `
+                        <div onclick="openChat('${peerUid}', '${uData.name}', '${uData.profile_pic || ''}')" class="p-4 border-b bg-white flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full overflow-hidden relative bg-gray-200">
+                                ${uData.profile_pic ? `<img src="${uData.profile_pic}" class="w-full h-full object-cover">` : `<div class="h-full flex items-center justify-center font-bold">${uData.name.charAt(0)}</div>`}
+                                <div class="status-dot ${uData.status?.online ? 'online' : 'offline'}"></div>
                             </div>
-                            <span class="text-[10px] truncate w-16 text-center font-bold text-gray-700">${u.name.split(' ')[0]}</span>
-                        </div>`;
-                        div.insertAdjacentHTML('beforeend', html);
-                    }
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-gray-800 truncate">${uData.name}</h4>
+                                    <span class="text-[10px] text-gray-400">${timeStr}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 truncate">${lastMsg}</p>
+                            </div>
+                        </div>`);
                 }
             });
         }
 
-        // চ্যাট ওপেন করা
+        function formatChatTime(ts) {
+            const date = new Date(ts);
+            const now = new Date();
+            if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
         window.openChat = (uid, name, pic) => {
-            currentChatUser = { uid, name };
+            currentChatUser = { uid, name, pic };
             document.getElementById('chat-conversation-view').classList.remove('hidden-custom');
             document.getElementById('chat-header-name').innerText = name;
             document.getElementById('chat-header-avatar').innerHTML = pic ? `<img src="${pic}" class="w-full h-full object-cover">` : name.charAt(0);
+            
+            onValue(ref(db, `users/${uid}/status`), (snap) => {
+                const status = snap.val();
+                const statusEl = document.getElementById('chat-header-status');
+                if (status?.online) {
+                    statusEl.innerText = "Active Now";
+                    statusEl.className = "text-[10px] font-bold text-green-500";
+                } else {
+                    const lastSeen = formatLastSeen(status?.last_seen);
+                    statusEl.innerText = lastSeen ? `Active ${lastSeen}` : "Offline";
+                    statusEl.className = "text-[10px] font-bold text-gray-400";
+                }
+            });
             loadMessages(uid);
-        };
-
-        window.closeChat = () => {
-            document.getElementById('chat-conversation-view').classList.add('hidden-custom');
-            currentChatUser = null;
         };
 
         function loadMessages(otherUid) {
@@ -269,51 +223,146 @@
             const div = document.getElementById('messages-container');
             
             onValue(query(ref(db, `chats/${chatId}`), limitToLast(50)), (snap) => {
-                if (currentChatUser?.uid !== otherUid) return;
-                const msgs = snap.val() || {};
-                div.innerHTML = Object.values(msgs).map(m => {
+                div.innerHTML = "";
+                snap.forEach((child) => {
+                    const m = child.val();
                     const isMe = m.sender === currentUser.uid;
                     const text = m.text ? decryptMsg(m.text) : "";
-                    return `
-                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in">
-                            <div class="px-4 py-2.5 max-w-[80%] text-[15px] shadow-sm ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}">
-                                ${m.image ? `<img src="${m.image}" class="rounded-lg mb-1 max-w-full">` : ''}
-                                ${text}
-                                <div class="text-[9px] mt-1 ${isMe ? 'text-green-100' : 'text-gray-400'} text-right">
-                                    ${formatTime(m.timestamp)}
+                    
+                    let content = text;
+                    if(m.type === 'image') content = `<img src="${m.url}" class="rounded-lg max-w-full mb-1 cursor-pointer" onclick="window.open('${m.url}')">`;
+                    if(m.type === 'audio') content = `<audio controls class="max-w-[200px] h-10"><source src="${m.url}" type="audio/mpeg"></audio>`;
+
+                    const html = `
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'} msg-row-container" data-id="${child.key}" data-text="${text}" data-sender="${isMe ? 'You' : currentChatUser.name}">
+                            <div class="msg-row max-w-[80%] flex items-end gap-2 relative" ontouchstart="handleTouchStart(event, this)" ontouchmove="handleTouchMove(event, this)" ontouchend="handleTouchEnd(event, this)">
+                                ${!isMe ? `<img src="${currentChatUser.pic || 'https://via.placeholder.com/40'}" class="w-6 h-6 rounded-full">` : ''}
+                                <div class="px-4 py-2 shadow-sm ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}">
+                                    ${m.replyTo ? `<div class="reply-box"><b>${m.replyTo.sender}:</b> ${m.replyTo.text}</div>` : ''}
+                                    ${content}
+                                    <div class="text-[8px] mt-1 opacity-70 text-right">${formatChatTime(m.timestamp)}</div>
                                 </div>
                             </div>
                         </div>`;
-                }).join('');
+                    div.insertAdjacentHTML('beforeend', html);
+                });
                 div.scrollTop = div.scrollHeight;
             });
         }
 
-        window.sendMsg = () => {
+        // Send Logic
+        window.sendMsg = (extra = {}) => {
             const input = document.getElementById('msg-input');
             const text = input.value.trim();
-            if (!text || !currentChatUser) return;
+            if (!text && !extra.url) return;
 
-            const chatId = currentUser.uid < currentChatUser.uid ? `${currentUser.uid}_${currentChatUser.uid}` : `${currentChatUser.uid}_${currentChatUser.uid}`;
-            const encrypted = encryptMsg(text);
-            const ts = Date.now();
+            const chatId = currentUser.uid < currentChatUser.uid ? `${currentUser.uid}_${currentChatUser.uid}` : `${currentChatUser.uid}_${currentUser.uid}`;
+            const msgObj = {
+                sender: currentUser.uid,
+                text: text ? encryptMsg(text) : "",
+                timestamp: Date.now(),
+                ...extra
+            };
 
-            push(ref(db, `chats/${chatId}`), { sender: currentUser.uid, text: encrypted, timestamp: ts });
-            update(ref(db, `user_chats/${currentUser.uid}/${currentChatUser.uid}`), { lastMessage: "You: " + encrypted, timestamp: ts });
-            update(ref(db, `user_chats/${currentChatUser.uid}/${currentUser.uid}`), { lastMessage: encrypted, timestamp: ts });
-            
+            if(replyData) {
+                msgObj.replyTo = replyData;
+                cancelReply();
+            }
+
+            push(ref(db, `chats/${chatId}`), msgObj);
+            const updateInfo = { lastMessage: text ? "You: " + encryptMsg(text) : "মেডিয়া ফাইল", timestamp: Date.now() };
+            update(ref(db, `user_chats/${currentUser.uid}/${currentChatUser.uid}`), updateInfo);
+            update(ref(db, `user_chats/${currentChatUser.uid}/${currentUser.uid}`), updateInfo);
             input.value = "";
         };
 
-        function formatTime(ts) {
-            const date = new Date(ts);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // File/Image Upload
+        window.uploadFile = async (file, type) => {
+            if(!file) return;
+            const path = `chats/${Date.now()}_${file.name}`;
+            const sRefObj = sRef(storage, path);
+            try {
+                const snap = await uploadBytes(sRefObj, file);
+                const url = await getDownloadURL(snap.ref);
+                sendMsg({ type: type, url: url });
+            } catch(e) { alert("আপলোড ব্যর্থ হয়েছে"); }
+        };
+
+        // Voice Recording Logic
+        let mediaRecorder;
+        let audioChunks = [];
+        const recordBtn = document.getElementById('record-btn');
+
+        recordBtn.onmousedown = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+            recordBtn.classList.add('recording-pulse');
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        };
+
+        recordBtn.onmouseup = () => {
+            if(!mediaRecorder) return;
+            mediaRecorder.stop();
+            recordBtn.classList.remove('recording-pulse');
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+                uploadFile(audioBlob, 'audio');
+            };
+        };
+
+        // Swipe to Reply Logic
+        let startX = 0;
+        window.handleTouchStart = (e, el) => { startX = e.touches[0].clientX; };
+        window.handleTouchMove = (e, el) => {
+            let moveX = e.touches[0].clientX - startX;
+            if (moveX > 0 && moveX < 100) {
+                el.style.transform = `translateX(${moveX}px)`;
+            }
+        };
+        window.handleTouchEnd = (e, el) => {
+            let moveX = e.changedTouches[0].clientX - startX;
+            el.style.transform = `translateX(0px)`;
+            if (moveX > 50) {
+                const parent = el.closest('.msg-row-container');
+                setReply(parent.dataset.sender, parent.dataset.text);
+            }
+        };
+
+        function setReply(sender, text) {
+            replyData = { sender, text };
+            document.getElementById('reply-preview').classList.remove('hidden');
+            document.getElementById('reply-user-name').innerText = sender;
+            document.getElementById('reply-text-preview').innerText = text;
+            document.getElementById('msg-input').focus();
         }
 
-        // এন্টার চাপলে মেসেজ যাবে
-        document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+        window.cancelReply = () => {
+            replyData = null;
+            document.getElementById('reply-preview').classList.add('hidden');
+        };
 
+        window.closeChat = () => document.getElementById('chat-conversation-view').classList.add('hidden-custom');
+
+        // Quick Friends
+        async function loadQuickFriends(uid) {
+            const div = document.getElementById('quick-chat-friends');
+            onValue(ref(db, `users/${uid}/friends`), async (snap) => {
+                div.innerHTML = ""; 
+                for (const fUid in snap.val() || {}) {
+                    const u = (await get(ref(db, 'users/' + fUid))).val();
+                    if (u) div.insertAdjacentHTML('beforeend', `
+                        <div onclick="openChat('${fUid}', '${u.name}', '${u.profile_pic || ''}')" class="flex flex-col items-center min-w-[60px]">
+                            <div class="w-12 h-12 rounded-full border-2 border-white relative mb-1 shadow-sm">
+                                ${u.profile_pic ? `<img src="${u.profile_pic}" class="w-full h-full rounded-full object-cover">` : `<div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>`}
+                                <div class="status-dot ${u.status?.online ? 'online' : 'offline'}"></div>
+                            </div>
+                            <span class="text-[9px] truncate w-14 text-center font-bold text-gray-700">${u.name.split(' ')[0]}</span>
+                        </div>`);
+                }
+            });
+        }
     </script>
 </body>
-
 </html>
