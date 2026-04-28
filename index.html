@@ -2198,7 +2198,7 @@
             globalMarketItems = [],
             globalDirectory = {};
         let allAds = []; // Store fetched ads
-        let isChatModuleLoaded = false;
+        window.isChatModuleLoaded = false;
         
         // --- NEW GLOBALS FOR MONETIZATION & POINTS ---
         window.dynamicPoints = {
@@ -6288,9 +6288,9 @@ window.addEventListener('uploadNIDEvent', async (e) => {
         function switchPage(id, addHistory = true) {
             document.querySelectorAll('.post-menu-dropdown').forEach(el => el.classList.add('hidden'));
             
-            if (id === 'messages' && !isChatModuleLoaded) {
-        fetchChatModule(); 
-    }
+            if (id === 'messages' && !window.isChatModuleLoaded) {
+    window.fetchChatModule(); 
+}
 
             // Hide all pages & reset nav buttons
             ['home', 'services', 'market', 'blood', 'emergency', 'directory', 'directory-list', 'profile', 'people', 'messages', 'notifications', 'view-profile', 'friends-list', 'complaints', 'settings', 'dynamic-content', 'monetization', 'verification', 'invite', 'transport', 'rent-a-car', 'bus'].forEach(p => {
@@ -6443,34 +6443,31 @@ window.addEventListener('uploadNIDEvent', async (e) => {
                 document.querySelectorAll('.post-menu-dropdown').forEach(el => el.classList.add('hidden'));
             }
         });
-        
-        async function fetchChatModule() {
+      window.fetchChatModule = async function() {
     const container = document.getElementById('chat-content-placeholder');
     const loader = document.getElementById('chat-loader');
+    if (!container || !loader) return;
 
     try {
-        // মনে রাখবেন, আপনার GitHub-এ chat-module.html ফাইলটি থাকতে হবে
         const response = await fetch('https://pathargata-digital-community-ltd.github.io/chat-module.html');
-        
         if (!response.ok) throw new Error('Network error');
         
         const html = await response.text();
         container.innerHTML = html;
         
-        // চ্যাট লিস্ট লোড করার জন্য আপনার আগের ফাংশনগুলো কল করা
         if (window.currentUser) {
             loadChatList(window.currentUser.uid);
             loadQuickChatFriends();
         }
 
         loader.classList.add('hidden');
-        isChatModuleLoaded = true;
+        window.isChatModuleLoaded = true; 
 
     } catch (error) {
         console.error('Error:', error);
-        loader.innerHTML = '<p class="text-red-500 p-4 text-center">মেসেজ লোড হতে সমস্যা হয়েছে। ইন্টারনেট চেক করুন।</p>';
+        loader.innerHTML = '<p class="text-red-500 p-4 text-center">লোড হতে সমস্যা হয়েছে।</p>';
     }
-}
+};
     </script>
 
 </body>
