@@ -6,8 +6,8 @@
  * Version: 6.0
  */
 
-const CACHE_NAME = 'patharghata-pwa-v6.0';
-const DYNAMIC_CACHE_NAME = 'patharghata-dynamic-v6.0';
+const CACHE_NAME = 'patharghata-pwa-v6.1';
+const DYNAMIC_CACHE_NAME = 'patharghata-dynamic-v6.1';
 
 // রুটে থাকা মেইন ফাইলগুলো (messages.html যুক্ত করা হয়েছে)
 const STATIC_ASSETS = [
