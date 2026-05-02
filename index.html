@@ -2979,12 +2979,27 @@ window.loadChatList = (myUid) => {
     });
 };
 
-window.startChat = (uid, name) => {
+window.startChat = async (uid, name) => {
+    // ১. চেক করবে মডিউল লোড আছে কি না
+    if (!window.isChatModuleLoaded) {
+        showToast("মেসেজ অপশন লোড হচ্ছে...");
+        await window.fetchChatModule(); 
+    }
+
+    // ২. মডিউল লোড হওয়ার পর চ্যাট সেটআপ
     window.currentChatUser = { uid, name };
+    switchPage('messages'); 
+
     document.getElementById('chat-list-view')?.classList.add('hidden');
     document.getElementById('chat-conversation-view')?.classList.remove('hidden', 'hidden-custom');
-    document.getElementById('chat-header-name').innerText = name;
-    loadMessages(uid);
+    
+    const headerName = document.getElementById('chat-header-name');
+    if(headerName) headerName.innerText = name;
+    
+    if(typeof loadMessages === 'function') {
+        loadMessages(uid);
+    }
+    
     history.pushState({ page: 'chat-conversation' }, "", "#chat");
 };
 
@@ -4514,19 +4529,26 @@ if (document.getElementById('qual-refer')) document.getElementById('qual-refer')
         };
 
         function checkFriendshipStatus(targetUid, targetName) {
-            const actionDiv = document.getElementById('view-profile-actions');
-            actionDiv.innerHTML = '<button class="w-full bg-gray-200 py-2 rounded-lg text-sm font-bold">Checking...</button>';
-            get(ref(db, `users/${window.currentUser.uid}/friends/${targetUid}`)).then(snap => {
-                if (snap.exists()) actionDiv.innerHTML = `<button onclick="startChat('${targetUid}', '${escapeHTML(targetName)}')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:bg-blue-700 flex items-center justify-center gap-2"><i class="fa-brands fa-facebook-messenger"></i> মেসেজ</button><button onclick="unfriend('${targetUid}')" class="w-12 bg-red-100 text-red-600 py-2 rounded-lg font-bold text-sm hover:bg-red-200 flex items-center justify-center"><i class="fa-solid fa-user-xmark"></i></button>`;
-                else get(ref(db, `friend_requests/${targetUid}/${window.currentUser.uid}`)).then(reqSnap => {
-                    if (reqSnap.exists()) actionDiv.innerHTML = `<button onclick="toggleFriendRequest('${targetUid}')" class="flex-1 bg-gray-200 text-gray-600 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2">Cancel Request</button>`;
-                    else get(ref(db, `friend_requests/${window.currentUser.uid}/${targetUid}`)).then(incSnap => {
-                        if (incSnap.exists()) actionDiv.innerHTML = `<button onclick="acceptRequest('${targetUid}')" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:bg-green-700 flex items-center justify-center gap-2">Confirm</button><button onclick="cancelRequest('${targetUid}', true)" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-sm hover:bg-gray-300 flex items-center justify-center gap-2">Delete</button>`;
-                        else actionDiv.innerHTML = `<button onclick="sendFriendRequest('${targetUid}')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm shadow hover:bg-blue-700 flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus"></i> অ্যাড ফ্রেন্ড</button><button onclick="startChat('${targetUid}', '${escapeHTML(targetName)}')" class="flex-1 bg-gray-200 text-black py-2 rounded-lg font-bold text-sm hover:bg-gray-300 flex items-center justify-center gap-2"><i class="fa-brands fa-facebook-messenger"></i> মেসেজ</button>`;
-                    });
-                });
-            });
+    const actionDiv = document.getElementById('view-profile-actions');
+    if(!actionDiv) return;
+
+    // লোডিং বাটন দেখানো
+    actionDiv.innerHTML = '<button class="w-full bg-gray-200 py-2 rounded-lg text-sm font-bold">Checking...</button>';
+
+    get(ref(db, `users/${window.currentUser.uid}/friends/${targetUid}`)).then(snap => {
+        if (snap.exists()) {
+            // যদি বন্ধু হয় -> মেসেজ এবং আনফ্রেন্ড বাটন
+            actionDiv.innerHTML = `
+                <button onclick="startChat('${targetUid}', '${escapeHTML(targetName)}')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm shadow flex items-center justify-center gap-2"><i class="fa-brands fa-facebook-messenger"></i> মেসেজ</button>
+                <button onclick="unfriend('${targetUid}')" class="w-12 bg-red-100 text-red-600 py-2 rounded-lg font-bold text-sm flex items-center justify-center"><i class="fa-solid fa-user-xmark"></i></button>`;
+        } else {
+            // যদি বন্ধু না হয় -> অ্যাড ফ্রেন্ড এবং মেসেজ বাটন (যাতে যেকাউকে মেসেজ দেওয়া যায়)
+            actionDiv.innerHTML = `
+                <button onclick="sendFriendRequest('${targetUid}')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm shadow flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus"></i> অ্যাড ফ্রেন্ড</button>
+                <button onclick="startChat('${targetUid}', '${escapeHTML(targetName)}')" class="flex-1 bg-gray-100 text-gray-800 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"><i class="fa-brands fa-facebook-messenger"></i> মেসেজ</button>`;
         }
+    });
+}
 
         window.sendFriendRequest = (toUid) => set(ref(db, `friend_requests/${toUid}/${window.currentUser.uid}`), {
             fromName: userDetails.name,
@@ -6288,29 +6310,23 @@ window.addEventListener('uploadNIDEvent', async (e) => {
       window.fetchChatModule = async function() {
     const container = document.getElementById('chat-content-placeholder');
     const loader = document.getElementById('chat-loader');
-    if (!container || !loader) return;
+    if (!container) return;
 
     try {
-        // './' ব্যবহার করুন যাতে বর্তমান ডিরেক্টরি থেকে ফাইলটি নেয়
-        const response = await fetch('./chat-module.html'); 
-        if (!response.ok) throw new Error('ফাইলটি পাওয়া যায়নি');
-        
+        const response = await fetch('./chat-module.html');
+        if (!response.ok) throw new Error('ফাইল পাওয়া যায়নি');
         const html = await response.text();
         container.innerHTML = html;
         
-        // মডিউল লোড হওয়ার পর চ্যাট লিস্ট শুরু করা
+        window.isChatModuleLoaded = true;
+        
         if (window.currentUser) {
             window.loadChatList(window.currentUser.uid);
-            // যদি আপনার Active Friends এর কোনো ফাংশন থাকে তা এখানে কল করুন
             if(window.loadQuickChatFriends) window.loadQuickChatFriends();
         }
-
-        loader.classList.add('hidden');
-        window.isChatModuleLoaded = true; 
-
     } catch (error) {
-        console.error('চ্যাট মডিউল এরর:', error);
-        loader.innerHTML = `<p class="text-red-500 p-4 text-center">লোড হতে সমস্যা হয়েছে: ${error.message}</p>`;
+        console.error(error);
+        showToast("মেসেজ মডিউল লোড হতে সমস্যা হয়েছে", "error");
     }
 };
     </script>
