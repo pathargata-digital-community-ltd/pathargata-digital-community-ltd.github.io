@@ -2956,6 +2956,73 @@ if (refUid) {
                 }
             });
         };
+        
+        // --- চ্যাট মডিউল লজিক শুরু ---
+window.loadChatList = (myUid) => {
+    const container = document.getElementById('chat-list-container');
+    if(!container) return;
+    onValue(ref(db, `chats_meta/${myUid}`), async (snap) => {
+        const data = snap.val();
+        if (!data) {
+            container.innerHTML = '<p class="text-center text-gray-400 mt-10 text-sm">কোনো মেসেজ নেই</p>';
+            return;
+        }
+        const chatItems = Object.entries(data).sort((a, b) => b[1].lastTimestamp - a[1].lastTimestamp);
+        let html = '';
+        for (const [otherUid, meta] of chatItems) {
+            const user = await getUserData(otherUid);
+            if (!user) continue;
+            let avatar = user.profile_pic ? `<img src="${user.profile_pic}" class="w-12 h-12 rounded-full object-cover">` : `<div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center font-bold text-green-700">${user.name.charAt(0)}</div>`;
+            html += `<div onclick="startChat('${otherUid}', '${escapeHTML(user.name)}')" class="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50 transition"><div class="relative">${avatar}</div><div class="flex-1 min-w-0"><div class="flex justify-between items-center"><h4 class="font-bold text-gray-800 truncate">${escapeHTML(user.name)}</h4><span class="text-[10px] text-gray-400">${timeAgo(meta.lastTimestamp)}</span></div><p class="text-xs text-gray-500 truncate">${escapeHTML(meta.lastMsg)}</p></div></div>`;
+        }
+        container.innerHTML = html;
+    });
+};
+
+window.startChat = (uid, name) => {
+    window.currentChatUser = { uid, name };
+    document.getElementById('chat-list-view')?.classList.add('hidden');
+    document.getElementById('chat-conversation-view')?.classList.remove('hidden', 'hidden-custom');
+    document.getElementById('chat-header-name').innerText = name;
+    loadMessages(uid);
+    history.pushState({ page: 'chat-conversation' }, "", "#chat");
+};
+
+window.closeChat = () => {
+    document.getElementById('chat-conversation-view')?.classList.add('hidden');
+    document.getElementById('chat-list-view')?.classList.remove('hidden');
+    window.currentChatUser = null;
+};
+
+window.sendMsg = async () => {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text || !window.currentChatUser) return;
+    const myUid = window.currentUser.uid;
+    const otherUid = window.currentChatUser.uid;
+    const chatId = myUid < otherUid ? `${myUid}_${otherUid}` : `${otherUid}_${myUid}`;
+    const msgData = { sender: myUid, text: text, timestamp: Date.now() };
+    input.value = '';
+    await push(ref(db, `chats/${chatId}`), msgData);
+    const updateMeta = { lastMsg: text, lastTimestamp: Date.now() };
+    update(ref(db, `chats_meta/${myUid}/${otherUid}`), updateMeta);
+    update(ref(db, `chats_meta/${otherUid}/${myUid}`), updateMeta);
+};
+
+function loadMessages(otherUid) {
+    const myUid = window.currentUser.uid;
+    const chatId = myUid < otherUid ? `${myUid}_${otherUid}` : `${otherUid}_${myUid}`;
+    const container = document.getElementById('messages-container');
+    onValue(ref(db, `chats/${chatId}`), (snap) => {
+        const data = snap.val();
+        if (!data) { container.innerHTML = '<p class="text-center text-gray-400 mt-10">কথোপকথন শুরু করুন</p>'; return; }
+        container.innerHTML = Object.values(data).map(msg => {
+            const isMe = msg.sender === myUid;
+            return `<div class="flex ${isMe ? 'justify-end' : 'justify-start'}"><div class="${isMe ? 'chat-bubble-me' : 'chat-bubble-other'} px-4 py-2 max-w-[80%] shadow-sm mb-2">${escapeHTML(msg.text)}</div></div>`;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    });
+}
 
         // --- UPDATED PROFILE POST LOAD (Fetch All + Client Side Pagination) ---
         window.loadProfilePosts = (targetUid, containerId) => {
@@ -6094,6 +6161,10 @@ window.addEventListener('uploadNIDEvent', async (e) => {
                     window.loadNotifications(true);
                 }
             }
+            
+            if (id === 'messages' && !window.isChatModuleLoaded) {
+    window.fetchChatModule();
+}
 
             // Push History
             if (addHistory) history.pushState({
@@ -6220,23 +6291,26 @@ window.addEventListener('uploadNIDEvent', async (e) => {
     if (!container || !loader) return;
 
     try {
-        const response = await fetch('https://pathargata-digital-community-ltd.github.io/chat-module.html');
-        if (!response.ok) throw new Error('Network error');
+        // './' ব্যবহার করুন যাতে বর্তমান ডিরেক্টরি থেকে ফাইলটি নেয়
+        const response = await fetch('./chat-module.html'); 
+        if (!response.ok) throw new Error('ফাইলটি পাওয়া যায়নি');
         
         const html = await response.text();
         container.innerHTML = html;
         
+        // মডিউল লোড হওয়ার পর চ্যাট লিস্ট শুরু করা
         if (window.currentUser) {
-            loadChatList(window.currentUser.uid);
-            loadQuickChatFriends();
+            window.loadChatList(window.currentUser.uid);
+            // যদি আপনার Active Friends এর কোনো ফাংশন থাকে তা এখানে কল করুন
+            if(window.loadQuickChatFriends) window.loadQuickChatFriends();
         }
 
         loader.classList.add('hidden');
         window.isChatModuleLoaded = true; 
 
     } catch (error) {
-        console.error('Error:', error);
-        loader.innerHTML = '<p class="text-red-500 p-4 text-center">লোড হতে সমস্যা হয়েছে।</p>';
+        console.error('চ্যাট মডিউল এরর:', error);
+        loader.innerHTML = `<p class="text-red-500 p-4 text-center">লোড হতে সমস্যা হয়েছে: ${error.message}</p>`;
     }
 };
     </script>
