@@ -33,7 +33,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       // যেহেতু আপনার সাইটটি Pathargata ফোল্ডারে আছে, তাই পাথ ঠিক করে দেওয়া হলো
-      navigator.serviceWorker.register('/Pathargata/service-worker.js')
+      navigator.serviceWorker.register('./service-worker.js')
         .then((registration) => {
           console.log('Service Worker সফলভাবে রেজিস্টার হয়েছে:', registration.scope);
         })
@@ -627,7 +627,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
     </style>
-    <script src="https://pathargata-digital-community-ltd.github.io/Pathargata/advanced-features.js"></script>
+    <script src="https://pathargata-digital-community-ltd.github.io/advanced-features.js"></script>
 </head>
 
 <body id="body-main">
@@ -2243,21 +2243,6 @@ if (refUid) {
         window.selectedImages = [];
         window.taggedUsers = [];
         window.selectedFeeling = null;
-
-        // --- ENCRYPTION HELPERS (Simple AES) ---
-        const SECRET_KEY = "PatharghataDigitalSecretKey";
-        window.encryptMsg = (text) => {
-            return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
-        };
-        window.decryptMsg = (cipherText) => {
-            try {
-                const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
-                const originalText = bytes.toString(CryptoJS.enc.Utf8);
-                return originalText || cipherText; // Return original if decryption fails (backward compatibility)
-            } catch (e) {
-                return cipherText;
-            }
-        };
 
         // --- HELPER FUNCTIONS ---
         window.escapeHTML = (str) => {
@@ -6078,10 +6063,6 @@ window.addEventListener('uploadNIDEvent', async (e) => {
         function switchPage(id, addHistory = true) {
             document.querySelectorAll('.post-menu-dropdown').forEach(el => el.classList.add('hidden'));
             
-            if (id === 'messages' && !window.isChatModuleLoaded) {
-    window.fetchChatModule(); 
-}
-
             // Hide all pages & reset nav buttons
             ['home', 'services', 'market', 'blood', 'emergency', 'directory', 'directory-list', 'profile', 'people', 'messages', 'notifications', 'view-profile', 'friends-list', 'complaints', 'settings', 'dynamic-content', 'monetization', 'verification', 'invite', 'transport', 'rent-a-car', 'bus'].forEach(p => {
                 document.getElementById('page-' + p)?.classList.add('hidden');
