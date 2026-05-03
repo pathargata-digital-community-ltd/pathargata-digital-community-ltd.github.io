@@ -11,21 +11,30 @@
     <script src="https://openfpcdn.io/fingerprintjs/v4"></script>
     <!-- ১. OneSignal SDK Loader: এটি মেইন লাইব্রেরি লোড করবে -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
-<!-- ২. OneSignal Initialization: এটি নোটিফিকেশন চালু করবে -->
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
-      appId: "ff16859a-7400-4f70-b307-95d068580ea6", // আপনার App ID
-      safari_web_id: "web.onesignal.auto.17649533-3d0d-4581-9f93-9c8699101408", // এটি ঐচ্ছিক
+      appId: "ff16859a-7400-4f70-b307-95d068580ea6",
+      allowLocalhostAsSecureOrigin: true,
       notifyButton: {
-        enable: true, // ডানদিকের নিচে একটি বেল আইকন দেখাবে
+        enable: true,
       },
     });
-    // সাইটে ঢোকার সাথে সাথে পারমিশন চাওয়ার জন্য
     OneSignal.Slidedown.promptPush();
   });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('Success:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    });
+  }
 </script>
     <!-- Font Awesome -->
     <link rel="manifest" href="manifest.json">
